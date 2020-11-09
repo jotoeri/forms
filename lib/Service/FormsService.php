@@ -276,4 +276,15 @@ class FormsService {
 		}
 		return [];
 	}
+
+	/**
+	 * Has the form expired?
+	 *
+	 * @param int $formId The id of the form to check.
+	 * @return boolean
+	 */
+	public function hasFormExpired(int $formId): bool {
+		$form = $this->formMapper->findById($formId);
+		return ($form->getExpires() !== 0 && $form->getExpires() < time());
+	}
 }
