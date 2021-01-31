@@ -21,7 +21,13 @@
  -->
 
 <template>
-	<AppContent>
+	<AppContent v-if="isLoadingForm">
+		<EmptyContent icon="icon-loading">
+			{{ t('forms', 'Loading {title} …', { title: form.title }) }}
+		</EmptyContent>
+	</AppContent>
+
+	<AppContent v-else>
 		<!-- Forms title & description-->
 		<header>
 			<h2 class="form-title">
@@ -157,7 +163,26 @@ export default {
 		},
 	},
 
+	watch: {
+		hash() {
+			// If public view, abort. Should normally not occur.
+			if (this.publicView) {
+				console.error('Hash changed on public View. Aborting.')
+				return
+			}
+			// Fetch full form on change
+			this.fetchFullForm(this.form.id)
+			SetWindowTitle(this.formTitle)
+		},
+	},
+
 	beforeMount() {
+		// Public Views get their form by initial-state from parent. No fetch necessary.
+		if (this.publicView) {
+			this.isLoadingForm = false
+		} else {
+			this.fetchFullForm(this.form.id)
+		}
 		SetWindowTitle(this.formTitle)
 	},
 

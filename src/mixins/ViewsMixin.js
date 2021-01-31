@@ -22,6 +22,8 @@
 import { generateOcsUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
+import CancelableRequest from '../utils/CancelableRequest'
+import OcsResponse2Data from '../utils/OcsResponse2Data'
 
 export default {
 	props: {
@@ -33,9 +35,62 @@ export default {
 			type: Object,
 			required: true,
 		},
+		publicView: {
+			type: Boolean,
+			default: false,
+		},
+	},
+
+	data() {
+		return {
+			// State-Variable
+			isLoadingForm: true,
+
+			// storage for axios cancel function
+			cancelFetchFullForm: () => {},
+		}
 	},
 
 	methods: {
+		/**
+		 * Fetch the full form data and update parent
+		 *
+		 * @param {number} id the unique form hash
+		 */
+		async fetchFullForm(id) {
+			this.isLoadingForm = true
+
+			// Cancel previous request
+			this.cancelFetchFullForm('New request pending.')
+
+			// Output after cancelling previous request for logical order.
+			console.debug('Loading form', id)
+
+			// Create new cancelable get request
+			const { request, cancel } = CancelableRequest(async function(url, requestOptions) {
+				return axios.get(url, requestOptions)
+			})
+			// Store cancel-function
+			this.cancelFetchFullForm = cancel
+
+			try {
+				const response = await request(generateOcsUrl('apps/forms/api/v1', 2) + `form/${id}`)
+				this.$emit('update:form', OcsResponse2Data(response))
+				this.isLoadingForm = false
+			} catch (error) {
+				if (axios.isCancel(error)) {
+					console.debug('The request for form', id, 'has been canceled.', error)
+				} else {
+					console.error(error)
+					this.isLoadingForm = false
+				}
+			} finally {
+				if (this.form.title === '') {
+					this.focusTitle()
+				}
+			}
+		},
+
 		async saveFormProperty(key) {
 			try {
 				// TODO: add loading status feedback ?

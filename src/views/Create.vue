@@ -131,7 +131,6 @@ import Actions from '@nextcloud/vue/dist/Components/Actions'
 import AppContent from '@nextcloud/vue/dist/Components/AppContent'
 
 import answerTypes from '../models/AnswerTypes'
-import CancelableRequest from '../utils/CancelableRequest'
 import EmptyContent from '../components/EmptyContent'
 import Question from '../components/Questions/Question'
 import QuestionLong from '../components/Questions/QuestionLong'
@@ -169,14 +168,8 @@ export default {
 			answerTypes,
 
 			// Various states
-			isLoadingForm: true,
 			isLoadingQuestions: false,
-			errorForm: false,
-
 			isDragging: false,
-
-			// storage for axios cancel function
-			cancelFetchFullForm: () => {},
 		}
 	},
 
@@ -236,46 +229,6 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * Fetch the full form data and update parent
-		 *
-		 * @param {number} id the unique form hash
-		 */
-		async fetchFullForm(id) {
-			this.isLoadingForm = true
-
-			// Cancel previous request
-			this.cancelFetchFullForm('New request pending.')
-
-			// Output after cancelling previous request for logical order.
-			console.debug('Loading form', id)
-
-			// Create new cancelable get request
-			const { request, cancel } = CancelableRequest(async function(url, requestOptions) {
-				return axios.get(url, requestOptions)
-			})
-			// Store cancel-function
-			this.cancelFetchFullForm = cancel
-
-			try {
-				const response = await request(generateOcsUrl('apps/forms/api/v1', 2) + `form/${id}`)
-				this.$emit('update:form', OcsResponse2Data(response))
-				this.isLoadingForm = false
-			} catch (error) {
-				if (axios.isCancel(error)) {
-					console.debug('The request for form', id, 'has been canceled.', error)
-				} else {
-					console.error(error)
-					this.errorForm = true
-					this.isLoadingForm = false
-				}
-			} finally {
-				if (this.form.title === '') {
-					this.focusTitle()
-				}
-			}
-		},
-
 		/**
 		 * Focus title after form load
 		 */
