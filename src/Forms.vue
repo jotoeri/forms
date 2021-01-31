@@ -26,11 +26,38 @@
 		<AppNavigation>
 			<AppNavigationNew button-class="icon-add" :text="t('forms', 'New form')" @click="onNewForm" />
 			<template #list>
-				<AppNavigationForm v-for="form in forms"
-					:key="form.id"
-					:form="form"
-					@mobile-close-navigation="mobileCloseNavigation"
-					@delete="onDeleteForm" />
+				<!-- Form-Owner-->
+				<AppNavigationItem
+					icon="icon-home"
+					:title="t('forms', 'Owned Forms')"
+					:allow-collapse="true"
+					:open="true">
+					<template #default>
+						<AppNavigationForm v-for="form in forms.owned"
+							:key="form.id"
+							:form="form"
+							:read-only="false"
+							@mobile-close-navigation="mobileCloseNavigation"
+							@delete="onDeleteForm" />
+					</template>
+				</AppNavigationItem>
+
+				<!-- Shared Forms-->
+				<AppNavigationSpacer />
+				<AppNavigationItem
+					icon="icon-shared"
+					:title="t('forms', 'Shared with me')"
+					:allow-collapse="true"
+					:open="true">
+					<template #default>
+						<AppNavigationForm v-for="form in forms.shared"
+							:key="form.id"
+							:form="form"
+							:read-only="true"
+							@mobile-close-navigation="mobileCloseNavigation"
+							@delete="onDeleteForm" />
+					</template>
+				</AppNavigationItem>
 			</template>
 		</AppNavigation>
 
@@ -76,7 +103,9 @@ import axios from '@nextcloud/axios'
 
 import AppContent from '@nextcloud/vue/dist/Components/AppContent'
 import AppNavigation from '@nextcloud/vue/dist/Components/AppNavigation'
+import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
 import AppNavigationNew from '@nextcloud/vue/dist/Components/AppNavigationNew'
+import AppNavigationSpacer from '@nextcloud/vue/dist/Components/AppNavigationSpacer'
 import Content from '@nextcloud/vue/dist/Components/Content'
 import isMobile from '@nextcloud/vue/src/mixins/isMobile'
 
@@ -91,7 +120,9 @@ export default {
 		AppNavigationForm,
 		AppContent,
 		AppNavigation,
+		AppNavigationItem,
 		AppNavigationNew,
+		AppNavigationSpacer,
 		Content,
 		EmptyContent,
 	},
@@ -101,7 +132,10 @@ export default {
 	data() {
 		return {
 			loading: true,
-			forms: [],
+			forms: {
+				owned: [],
+				shared: [],
+			},
 		}
 	},
 
@@ -116,12 +150,19 @@ export default {
 
 		selectedForm: {
 			get() {
-				return this.forms.find(form => form.hash === this.routeHash)
+				return this.forms.owned.concat(this.forms.shared).find(form => form.hash === this.routeHash)
 			},
 			set(form) {
-				const index = this.forms.findIndex(search => search.hash === this.routeHash)
+				// If a owned form
+				let index = this.forms.owned.findIndex(search => search.hash === this.routeHash)
 				if (index > -1) {
-					this.$set(this.forms, index, form)
+					this.$set(this.forms.owned, index, form)
+					return
+				}
+				// Otherwise a shared form
+				index = this.forms.shared.findIndex(search => search.hash === this.routeHash)
+				if (index > -1) {
+					this.$set(this.forms.shared, index, form)
 				}
 			},
 		},
@@ -146,15 +187,26 @@ export default {
 		 */
 		async loadForms() {
 			this.loading = true
+
+			// Load Owned forms
 			try {
 				const response = await axios.get(generateOcsUrl('apps/forms/api/v1', 2) + 'forms')
-				this.forms = OcsResponse2Data(response)
+				this.forms.owned = OcsResponse2Data(response)
 			} catch (error) {
 				showError(t('forms', 'An error occurred while loading the forms list'))
 				console.error(error)
-			} finally {
-				this.loading = false
 			}
+
+			// Load shared forms
+			try {
+				const response = await axios.get(generateOcsUrl('apps/forms/api/v1', 2) + 'forms/shared')
+				this.forms.shared = OcsResponse2Data(response)
+			} catch (error) {
+				showError(t('forms', 'An error occurred while loading the forms list'))
+				console.error(error)
+			}
+
+			this.loading = false
 		},
 
 		/**
@@ -165,7 +217,7 @@ export default {
 				// Request a new empty form
 				const response = await axios.post(generateOcsUrl('apps/forms/api/v1', 2) + 'form')
 				const newForm = OcsResponse2Data(response)
-				this.forms.unshift(newForm)
+				this.forms.owned.unshift(newForm)
 				this.$router.push({ name: 'edit', params: { hash: newForm.hash } })
 				this.mobileCloseNavigation()
 			} catch (error) {
@@ -180,10 +232,10 @@ export default {
 		 * @param {Number} id the form id
 		 */
 		async onDeleteForm(id) {
-			const formIndex = this.forms.findIndex(form => form.id === id)
-			const deletedHash = this.forms[formIndex].hash
+			const formIndex = this.forms.owned.findIndex(form => form.id === id)
+			const deletedHash = this.forms.owned[formIndex].hash
 
-			this.forms.splice(formIndex, 1)
+			this.forms.owned.splice(formIndex, 1)
 
 			// Redirect if current form has been deleted
 			if (deletedHash === this.routeHash) {
