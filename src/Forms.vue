@@ -62,7 +62,7 @@
 		</AppNavigation>
 
 		<!-- No forms & loading emptycontents -->
-		<AppContent v-if="loading || noForms || (!routeHash && $route.name !== 'create')">
+		<AppContent v-if="loading || noForms || !routeHash">
 			<EmptyContent v-if="loading" icon="icon-loading">
 				{{ t('forms', 'Loading forms …') }}
 			</EmptyContent>
@@ -141,10 +141,15 @@ export default {
 
 	computed: {
 		noForms() {
-			return this.forms && this.forms.length === 0
+			return this.forms && (this.forms.owned.length === 0) && (this.forms.shared.length === 0)
 		},
 
 		routeHash() {
+			// If the form is not within the owned or shared list, the user has no access on internal view.
+			if (this.$route.params.hash && this.forms.owned.concat(this.forms.shared).findIndex(form => form.hash === this.$route.params.hash) < 0) {
+				console.error('Form not found for hash: ', this.$route.params.hash)
+				return undefined
+			}
 			return this.$route.params.hash
 		},
 
