@@ -34,12 +34,15 @@ use OCP\Accounts\IAccountManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http\Template\PublicTemplateResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IGroupManager;
 use OCP\IInitialStateService;
 use OCP\IL10N;
 use OCP\ILogger;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -74,6 +77,9 @@ class PageController extends Controller {
 	/** @var ILogger */
 	private $logger;
 
+	/** @var IUrlGenerator */
+	private $urlGenerator;
+
 	/** @var IUserManager */
 	private $userManager;
 	
@@ -101,6 +107,7 @@ class PageController extends Controller {
 								IInitialStateService $initialStateService,
 								IL10N $l10n,
 								ILogger $logger,
+								IUrlGenerator $urlGenerator,
 								IUserManager $userManager,
 								IUserSession $userSession) {
 		parent::__construct($appName, $request);
@@ -115,6 +122,7 @@ class PageController extends Controller {
 		$this->initialStateService = $initialStateService;
 		$this->l10n = $l10n;
 		$this->logger = $logger;
+		$this->urlGenerator = $urlGenerator;
 		$this->userManager = $userManager;
 		$this->userSession = $userSession;
 	}
@@ -137,9 +145,9 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 * @param string $hash
-	 * @return TemplateResponse
+	 * @return RedirectResponse|TemplateResponse Redirect for logged-in users, public template otherwise.
 	 */
-	public function gotoForm($hash): ?TemplateResponse {
+	public function gotoForm(string $hash): Response {
 		// Inject style on all templates
 		Util::addStyle($this->appName, 'forms');
 
@@ -147,6 +155,11 @@ class PageController extends Controller {
 			$form = $this->formMapper->findByHash($hash);
 		} catch (DoesNotExistException $e) {
 			return $this->provideTemplate(self::TEMPLATE_NOTFOUND);
+		}
+
+		// If logged in and not link-shared, redirect to internal route
+		if ($this->userSession->isLoggedIn() && $form->getAccess()['type'] !== 'public') {
+			return new RedirectResponse($this->urlGenerator->linkToRoute('forms.page.index', ['hash' => $hash, 'action' => 'submit']));
 		}
 
 		// Does the user have access to form
