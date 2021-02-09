@@ -26,10 +26,10 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import { generateUrl } from '@nextcloud/router'
 
-import Create from './views/Create'
-import Results from './views/Results'
-import Sidebar from './views/Sidebar'
-import Submit from './views/Submit'
+const Create = () => import('./views/Create')
+const Results = () => import('./views/Results')
+const Sidebar = () => import('./views/Sidebar')
+const Submit = () => import('./views/Submit')
 
 Vue.use(Router)
 
