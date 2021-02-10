@@ -15,6 +15,17 @@ const config = {
 			},
 		],
 	},
+	optimization: {
+		splitChunks: {
+			cacheGroups: {
+				moment: {
+					test: /[\\/]node_modules[\\/](moment)[\\/]/,
+					name: 'moment',
+					chunks: 'all',
+				},
+			},
+		},
+	},
 }
 
 module.exports = merge(config, webpackConfig)

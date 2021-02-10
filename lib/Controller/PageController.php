@@ -135,6 +135,7 @@ class PageController extends Controller {
 	 */
 	public function index(): TemplateResponse {
 		Util::addScript($this->appName, 'forms-main');
+		Util::addScript($this->appName, 'forms-moment');
 		Util::addStyle($this->appName, 'forms');
 		$this->initialStateService->provideInitialState($this->appName, 'maxStringLengths', $this->maxStringLengths);
 		return new TemplateResponse($this->appName, self::TEMPLATE_MAIN);
@@ -179,6 +180,7 @@ class PageController extends Controller {
 
 		// Main Template to fill the form
 		Util::addScript($this->appName, 'forms-submit');
+		Util::addScript($this->appName, 'forms-moment');
 		$this->initialStateService->provideInitialState($this->appName, 'form', $this->formsService->getPublicForm($form->getId()));
 		$this->initialStateService->provideInitialState($this->appName, 'maxStringLengths', $this->maxStringLengths);
 		return $this->provideTemplate(self::TEMPLATE_MAIN, $form);
