@@ -31,7 +31,8 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import Content from '@nextcloud/vue/dist/Components/Content'
-import Submit from './views/Submit'
+
+const Submit = () => import(/* webpackChunkName: "Submit" *//* webpackPreload: true */'./views/Submit')
 
 export default {
 	name: 'FormsSubmit',
