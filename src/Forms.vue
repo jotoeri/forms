@@ -27,37 +27,27 @@
 			<AppNavigationNew button-class="icon-add" :text="t('forms', 'New form')" @click="onNewForm" />
 			<template #list>
 				<!-- Form-Owner-->
-				<AppNavigationItem
+				<AppNavigationItem class="navigationItem--heading"
 					icon="icon-home"
-					:title="t('forms', 'Owned Forms')"
-					:allow-collapse="true"
-					:open="true">
-					<template #default>
-						<AppNavigationForm v-for="form in forms.owned"
-							:key="form.id"
-							:form="form"
-							:read-only="false"
-							@mobile-close-navigation="mobileCloseNavigation"
-							@delete="onDeleteForm" />
-					</template>
-				</AppNavigationItem>
+					:title="t('forms', 'Your Forms')" />
+				<AppNavigationForm v-for="form in forms.owned"
+					:key="form.id"
+					:form="form"
+					:read-only="false"
+					@mobile-close-navigation="mobileCloseNavigation"
+					@delete="onDeleteForm" />
 
 				<!-- Shared Forms-->
 				<AppNavigationSpacer />
-				<AppNavigationItem
+				<AppNavigationItem class="navigationItem--heading"
 					icon="icon-shared"
-					:title="t('forms', 'Shared with me')"
-					:allow-collapse="true"
-					:open="true">
-					<template #default>
-						<AppNavigationForm v-for="form in forms.shared"
-							:key="form.id"
-							:form="form"
-							:read-only="true"
-							@mobile-close-navigation="mobileCloseNavigation"
-							@delete="onDeleteForm" />
-					</template>
-				</AppNavigationItem>
+					:title="t('forms', 'Shared with you')" />
+				<AppNavigationForm v-for="form in forms.shared"
+					:key="form.id"
+					:form="form"
+					:read-only="true"
+					@mobile-close-navigation="mobileCloseNavigation"
+					@delete="onDeleteForm" />
 			</template>
 		</AppNavigation>
 
@@ -250,3 +240,11 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss">
+.navigationItem--heading {
+	.app-navigation-entry__title {
+		color: var(--color-text-maxcontrast);
+	}
+}
+</style>
