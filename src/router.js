@@ -26,10 +26,10 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import { generateUrl } from '@nextcloud/router'
 
-const Create = () => import(/* webpackPrefetch: true */'./views/Create')
-const Results = () => import(/* webpackPrefetch: true */'./views/Results')
-const Sidebar = () => import(/* webpackPrefetch: true */'./views/Sidebar')
-const Submit = () => import(/* webpackPrefetch: true */'./views/Submit')
+const Create = () => import(/* webpackChunkName: "Create" *//* webpackPrefetch: true */'./views/Create')
+const Results = () => import(/* webpackChunkName: "Results" *//* webpackPrefetch: true */'./views/Results')
+const Sidebar = () => import(/* webpackChunkName: "Sidebar" *//* webpackPrefetch: true */'./views/Sidebar')
+const Submit = () => import(/* webpackChunkName: "Submit" *//* webpackPrefetch: true */'./views/Submit')
 
 Vue.use(Router)
 
